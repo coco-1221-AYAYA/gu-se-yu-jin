@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+    <title>古色余烬 · 器物褪色美学</title>
+    <style>
+        :root {
+            --bg-color: #e5d8cb;
+            --text-color: #5a4a3f;
+            --accent-color: #94806b;
+            --panel-bg: rgba(245, 238, 230, 0.85);
+            --border-color: #d4c4b5;
+        }
+
+        @font-face { font-family: 'QIJIC'; src: local('QIJIC'); }
+        
+        /* 【修改点1】引入本地 TTF 字体，请检查文件名是否匹配 */
+        @font-face { 
+            font-family: 'YanShiFoXi'; 
+            src: url('./images/演示佛系体.ttf') format('truetype');
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background: radial-gradient(circle at center, #f2e8df 0%, #dccbb8 100%);
+            font-family: 'QIJIC', "STSong", "SimSun", serif;
+            color: var(--text-color);
+            user-select: none; -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+        }
+
+        .hidden { display: none !important; }
+
+        /* 全局视图容器 */
+        .view {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 60px 15px 20px 15px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease;
+        }
+        
+        #view-color { padding-left: 5px; padding-right: 5px; }
+
+        /* ================= 按钮再缩小 ================= */
+        .back-btn, .audio-btn {
+            position: absolute; top: 12px; 
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 20px; cursor: pointer; font-family: 'QIJIC', serif; font-size: 1rem;
+            color: var(--text-color); z-index: 1000; transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;
+        }
+        .back-btn { left: 12px; height: 36px; padding: 0 14px; }
+        .audio-btn { right: 12px; width: 36px; height: 36px; font-size: 1.1rem; }
+        .back-btn:active, .audio-btn:active { transform: scale(0.92); background: #fff; }
+        .back-btn span { margin-left: 4px; font-size: 0.85rem; font-weight: bold; }
+
+        /* 音频面板缩小 */
+        #audio-panel {
+            position: absolute; top: 56px; right: 12px;
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 12px; width: 170px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1); backdrop-filter: blur(10px); z-index: 1001;
+            transition: all 0.3s ease;
+        }
+        #audio-panel.hidden { opacity: 0; pointer-events: none; transform: translateY(-10px); }
+        .control-row { display: flex; align-items: center; margin-bottom: 10px; }
+        .control-row:last-child { margin-bottom: 0; }
+        .icon-btn { cursor: pointer; width: 40px; display: flex; align-items: center; margin-right: 5px; color: var(--text-color); font-size: 0.9rem; }
+        .icon-btn span { font-family: 'QIJIC', serif; font-weight: bold; }
+        .icon-btn.muted { opacity: 0.3; filter: grayscale(1); }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; flex: 1; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 5px; cursor: pointer; background: #e0d5c8; border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 14px; width: 14px; border-radius: 50%; background: var(--accent-color); cursor: pointer; -webkit-appearance: none; margin-top: -4.5px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+        /* ================= 首页 ================= */
+        #view-home { cursor: pointer; z-index: 10; }
+        
+        .vertical-title {
+            font-family: 'YanShiFoXi', '楷体', serif;
+            font-size: 15vw; 
+            color: #94806b;
+            writing-mode: vertical-rl; 
+            letter-spacing: 10px;
+            margin: 0;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.12);
+            z-index: 20;
+            font-weight: normal;
+        }
+
+        .floating-items { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; top: 0; left: 0; }
+        .float-item { position: absolute; width: 12vw; max-width: 50px; opacity: 0.6; transform-origin: center; }
+        @keyframes floatAnim {
+            0% { translate: 0 0; rotate: 0deg; }
+            50% { translate: 0 -8px; rotate: 2deg; }
+            100% { translate: 0 0; rotate: 0deg; }
+        }
+
+        /* ================= 游戏选择界面 (更紧凑) ================= */
+        .view-title { font-family: 'QIJIC', serif; color: var(--accent-color); margin-bottom: 20px; }
+        
+        #view-select-game .view-title {
+            font-size: 2.2rem; /* 进一步缩小 */
+            letter-spacing: 6px;
+            margin-bottom: 25px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .game-select-container { display: flex; gap: 8vw; justify-content: center; width: 100%; }
+        .game-card {
+            width: 30vw; max-width: 140px; height: 35vh; max-height: 260px; /* 进一步缩小方框 */
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .game-card:active { transform: scale(0.95); }
+        .game-card h3 { 
+            font-family: 'QIJIC', serif; font-size: 1.6rem; color: var(--accent-color); margin: 0; /* 缩小文字 */
+            writing-mode: vertical-lr; letter-spacing: 8px; /* 字距贴近 */
+        }
+
+        /* ================= 选择器物界面 (更紧凑) ================= */
+        #view-select-artifact .view-title {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            letter-spacing: 5px;
+        }
+        
+        .artifact-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px;
+            width: 92vw; max-width: 420px; /* 容器进一步收窄 */
+            max-height: 70vh; 
+            overflow-y: auto; 
+            background: var(--panel-bg); border-radius: 14px; border: 1px solid var(--border-color);
+            box-sizing: border-box; align-content: start;
+        }
+        
+        .artifact-item {
+            background: rgba(255,255,255,0.7); border-radius: 10px; 
+            height: 90px; /* 大幅缩小单卡高度 */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; padding: 8px; box-sizing: border-box;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .artifact-item:active { background: #fff; transform: scale(0.95); }
+        .artifact-item img { width: 65%; height: 50%; object-fit: contain; margin-bottom: 4px; }
+        .artifact-item span { font-size: 0.8rem; text-align: center; line-height: 1.1; font-weight: bold; }
+
+        /* ================= 觅残纹 (拼图) ================= */
+        .puzzle-wrapper {
+            display: flex; flex-direction: column; width: 95vw; height: 100%; max-height: 75vh;
+            gap: 12px;
+        }
+        
+        #puzzle-pool { 
+            width: 100%; height: 10vh; min-height: 70px;
+            background: var(--panel-bg); border: 2px dashed var(--border-color); border-radius: 12px;
+            display: flex; align-items: center; padding: 10px;
+            overflow-x: auto; overflow-y: hidden; white-space: nowrap; flex-shrink: 0;
+            scrollbar-width: none;
+        }
+        #puzzle-pool::-webkit-scrollbar { display: none; }
+        
+        .puzzle-target { 
+            width: 100%; flex: 1;
+            background: var(--panel-bg); border: 2px dashed var(--border-color); border-radius: 12px;
+            position: relative; overflow: hidden; 
+        }
+        
+        .puzzle-target-img { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            max-width: 90%; max-height: 90%; opacity: 0.15; pointer-events: none; filter: grayscale(100%); z-index: 1; 
+        }
+        
+        .puzzle-piece { cursor: grab; background-repeat: no-repeat; transition: transform 0.1s; }
+        .puzzle-piece.in-pool { flex-shrink: 0; margin-right: 15px; filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.3)); }
+        .puzzle-piece.dragging { position: fixed; z-index: 999999; cursor: grabbing; filter: drop-shadow(5px 10px 15px rgba(0,0,0,0.5)); }
+        .puzzle-piece.placed { position: absolute; z-index: 20; filter: none; }
+
+        /* ================= 染余痕 (涂色) ================= */
+        .color-wrapper {
+            display: flex; flex-direction: column; width: 100%; height: 100%; max-height: 75vh;
+            gap: 15px; align-items: center;
+        }
+        .color-container {
+            position: relative; width: 100%; max-width: none; flex: 1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 12px; overflow: hidden; 
+            background: #ffffff; border: 2px solid var(--border-color);
+        }
+        .color-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #color-base { z-index: 1; }
+        #color-mask { z-index: 2; cursor: crosshair; touch-action: none; }
+        #color-check { display: none; }
+
+        /* ================= 进度条组件 ================= */
+        .progress-container { 
+            display: flex; flex-direction: column; align-items: center; width: 100%; 
+            flex-shrink: 0; padding-bottom: 10px;
+        }
+        .progress-text { font-family: 'QIJIC', serif; font-size: 1.1rem; color: var(--accent-color); margin-bottom: 8px; font-weight: bold; letter-spacing: 1px;}
+        .progress-bar-bg {
+            width: 85vw; max-width: 320px; height: 8px; background: #e0d5c8; border-radius: 4px; overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8a593, var(--accent-color)); transition: width 0.1s linear; }
+        
+        /* 弹窗 */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-box {
+            background: #f7f3ed; padding: 25px 35px; border-radius: 16px; text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2); border: 1px solid var(--border-color);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .modal-title { font-family: 'QIJIC', serif; font-size: 1.5rem; color: var(--accent-color); margin-bottom: 20px; letter-spacing: 2px; }
+        .modal-btns { display: flex; gap: 15px; justify-content: center; }
+        .btn {
+            background: var(--panel-bg); border: 1px solid var(--border-color); padding: 8px 20px;
+            border-radius: 16px; color: var(--text-color); font-size: 0.95rem; cursor: pointer;
+            font-family: 'QIJIC', serif; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .btn:active { transform: scale(0.95); background: #fff; }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" src="./images/music.mp3" loop preload="auto"></audio>
+    <audio id="sfx-src" src="./images/music2.mp3" preload="auto"></audio>
+
+    <div class="audio-btn" onclick="toggleAudioPanel()">🎵</div>
+    <div id="audio-panel" class="hidden">
+        <div class="control-row">
+            <div class="icon-btn" id="music-icon" onclick="toggleMusic()"><span>音乐</span></div>
+            <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.5">
+        </div>
+        <div class="control-row">
+            <div class="icon-btn" id="sound-icon-toggle" onclick="toggleSound()"><span>音效</span></div>
+            <input type="range" id="sound-volume" min="0" max="1" step="0.05" value="0.5">
+        </div>
+    </div>
+
+    <!-- 首页 -->
+    <div id="view-home" class="view">
+        <h1 class="vertical-title">古色余烬</h1>
+        <div class="floating-items" id="floating-items"></div>
+    </div>
+
+    <!-- 游戏选择 -->
+    <div id="view-select-game" class="view hidden">
+        <div class="back-btn" onclick="goBack()"><span>← 返回</span></div>
+        <h1 class="view-title">择一雅事</h1>
+        <div class="game-select-container">
+            <div class="game-card" onclick="startGame('puzzle')"><h3>觅残纹</h3></div>
+            <div class="game-card" onclick="startGame('color')"><h3>染余痕</h3></div>
+        </div>
+    </div>
+
+    <!-- 选择器物 -->
+    <div id="view-select-artifact" class="view hidden">
+        <div class="back-btn" onclick="goBack()"><span>← 返回</span></div>
+        <h1 class="view-title" id="select-artifact-title">择器</h1>
+        <div class="artifact-grid" id="artifact-grid"></div>
+    </div>
+
+    <!-- 拼图游戏 -->
+    <div id="view-puzzle" class="view hidden">
+        <div class="back-btn" onclick="goBack()"><span>← 返回</span></div>
+        <div class="puzzle-wrapper">
+            <div id="puzzle-pool"></div>
+            <div class="puzzle-target" id="puzzle-target">
+                <img id="target-img" class="puzzle-target-img" src="" alt="">
+            </div>
+            <div class="progress-container">
+                <div class="progress-text" id="puzzle-progress-text">古器重聚度: 0%</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="puzzle-progress-bar"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 涂抹游戏 -->
+    <div id="view-color" class="view hidden">
+        <div class="back-btn" onclick="goBack()"><span>← 返回</span></div>
+        <div class="color-wrapper">
+            <div class="color-container" id="color-container">
+                <canvas id="color-base" class="color-canvas"></canvas>
+                <canvas id="color-mask" class="color-canvas"></canvas>
+            </div>
+            <canvas id="color-check" width="100" height="100"></canvas>
+            <div class="progress-container">
+                <div class="progress-text" id="color-progress-text">古色复还度: 0%</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="color-progress-bar"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div id="modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-title" id="modal-title-text">完成</div>
+            <div class="modal-btns">
+                <button class="btn" onclick="modalAction('back')">返回</button>
+                <button class="btn" onclick="modalAction('continue')">继续</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= 音频控制逻辑 =================
+        const bgm = document.getElementById('bgm');
+        const sfxSrc = document.getElementById('sfx-src');
+        let lastMusicVol = 0.5, lastSoundVol = 0.5;
+        let isMusicMuted = false, isSoundMuted = false;
+        let sfxSegments = [], currentSfxIndex = 0; 
+
+        const musicSlider = document.getElementById('music-volume');
+        const soundSlider = document.getElementById('sound-volume');
+        const musicIcon = document.getElementById('music-icon');
+        const soundIconToggle = document.getElementById('sound-icon-toggle');
+
+        bgm.volume = lastMusicVol;
+
+        sfxSrc.addEventListener('loadedmetadata', () => {
+            const total = sfxSrc.duration;
+            const step = total / 4;
+            const playDuration = Math.min(1.5, step * 0.8); 
+            sfxSegments = [
+                { start: step * 0, duration: playDuration },
+                { start: step * 1, duration: playDuration },
+                { start: step * 2, duration: playDuration },
+                { start: step * 3, duration: playDuration }
+            ];
+        });
+
+        function forcePlayBGM() {
+            if (bgm.paused) {
+                bgm.volume = isMusicMuted ? 0 : lastMusicVol;
+                bgm.play().catch(e => {});
+            }
+        }
+        document.addEventListener('touchstart', forcePlayBGM, { once: true });
+        document.addEventListener('click', forcePlayBGM, { once: true });
+
+        function toggleAudioPanel() {
+            document.getElementById('audio-panel').classList.toggle('hidden');
+            playSFX();
+        }
+
+        musicSlider.addEventListener('input', (e) => {
+            const vol = parseFloat(e.target.value);
+            bgm.volume = vol; lastMusicVol = vol;
+            if (vol > 0) { isMusicMuted = false; musicIcon.classList.remove('muted'); } 
+            else { isMusicMuted = true; musicIcon.classList.add('muted'); }
+        });
+
+        soundSlider.addEventListener('input', (e) => {
+            const vol = parseFloat(e.target.value);
+            lastSoundVol = vol;
+            if (vol > 0) { isSoundMuted = false; soundIconToggle.classList.remove('muted'); } 
+            else { isSoundMuted = true; soundIconToggle.classList.add('muted'); }
+        });
+
+        function toggleMusic() {
+            if (isMusicMuted) {
+                isMusicMuted = false; bgm.volume = lastMusicVol;
+                musicSlider.value = lastMusicVol; musicIcon.classList.remove('muted');
+            } else {
+                isMusicMuted = true; bgm.volume = 0;
+                musicSlider.value = 0; musicIcon.classList.add('muted');
+            }
+            playSFX();
+        }
+
+        function toggleSound() {
+            if (isSoundMuted) {
+                isSoundMuted = false; soundSlider.value = lastSoundVol; soundIconToggle.classList.remove('muted');
+            } else {
+                isSoundMuted = true; soundSlider.value = 0; soundIconToggle.classList.add('muted');
+            }
+            if (!isSoundMuted) playSFX();
+        }
+
+        function playSFX() {
+            if (isSoundMuted || soundSlider.value == 0 || sfxSegments.length === 0) return;
+            try {
+                const segment = sfxSegments[currentSfxIndex];
+                currentSfxIndex = (currentSfxIndex + 1) % 4;
+                
+                const sfx = sfxSrc.cloneNode();
+                sfx.volume = lastSoundVol;
+                sfx.currentTime = segment.start; 
+                sfx.play().catch(e => {});
+                
+                const totalTime = segment.duration * 1000;
+                const fadeTime = totalTime * 0.6;
+                
+                setTimeout(() => {
+                    let fadeInterval = setInterval(() => {
+                        if (sfx.volume > 0.05) sfx.volume -= 0.05;
+                        else { clearInterval(fadeInterval); sfx.pause(); sfx.remove(); }
+                    }, 30);
+                }, fadeTime); 
+                setTimeout(() => { sfx.pause(); sfx.remove(); }, totalTime + 200);
+            } catch (e) {}
+        }
+
+        // ================= 游戏逻辑 =================
+        const artifacts = [
+            { id: 0, name: '影清釉里红高足瓷杯', img: 'images/2.png' },
+            { id: 1, name: '青釉提梁倒灌壶', img: 'images/7.png' },
+            { id: 2, name: '虎座鸟架鼓', img: 'images/3.png' },
+            { id: 3, name: '彩绘龙凤纹盖豆', img: 'images/8.png' },
+            { id: 4, name: '四羊方尊', img: 'images/4.png' },
+            { id: 5, name: '司母戊鼎', img: 'images/9.png' },
+            { id: 6, name: '玉龙', img: 'images/5.png' },
+            { id: 7, name: '青玉夔首鸟形佩', img: 'images/10.png' },
+            { id: 8, name: '马王堆 T 形帛画', img: 'images/6.png' },
+            { id: 9, name: '五星出东方利中国锦护臂', img: 'images/11.png' }
+        ];
+
+        let currentGameType = ''; 
+        let currentView = 'view-home';
+
+        function init() {
+            createFloatingItems();
+            renderArtifactGrid();
+            document.getElementById('view-home').addEventListener('click', () => { 
+                forcePlayBGM(); playSFX(); showView('view-select-game'); 
+            });
+        }
+
+        function createFloatingItems() {
+            const container = document.getElementById('floating-items');
+            container.innerHTML = '';
+            
+            const positions = [
+                {x: 15, y: 12}, {x: 10, y: 32}, {x: 18, y: 52}, {x: 10, y: 72}, {x: 15, y: 92},
+                {x: 85, y: 12}, {x: 90, y: 32}, {x: 82, y: 52}, {x: 90, y: 72}, {x: 85, y: 92}
+            ];
+            
+            artifacts.forEach((art, i) => {
+                const img = document.createElement('img');
+                img.src = art.img; img.className = 'float-item';
+                img.style.left = `${positions[i].x}%`; img.style.top = `${positions[i].y}%`;
+                img.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 20 - 10}deg)`;
+                img.style.animation = `floatAnim ${5 + Math.random() * 3}s ease-in-out infinite alternate`;
+                container.appendChild(img);
+            });
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+            currentView = viewId;
+        }
+
+        function goBack() {
+            playSFX();
+            if (currentView === 'view-select-game') showView('view-home');
+            else if (currentView === 'view-select-artifact') showView('view-select-game');
+            else if (currentView === 'view-puzzle' || currentView === 'view-color') showView('view-select-artifact');
+        }
+
+        function startGame(type) {
+            playSFX(); currentGameType = type;
+            document.getElementById('select-artifact-title').innerText = type === 'puzzle' ? '择器·觅残纹' : '择器·染余痕';
+            showView('view-select-artifact');
+        }
+
+        function renderArtifactGrid() {
+            const grid = document.getElementById('artifact-grid');
+            grid.innerHTML = '';
+            artifacts.forEach((art, index) => {
+                const div = document.createElement('div');
+                div.className = 'artifact-item';
+                div.onclick = () => loadGame(art, index);
+                div.innerHTML = `<img src="${art.img}" alt="${art.name}"><span>${art.name}</span>`;
+                grid.appendChild(div);
+            });
+        }
+
+        function loadGame(art, index) {
+            playSFX();
+            if (currentGameType === 'puzzle') { showView('view-puzzle'); initPuzzle(art.img); } 
+            else if (currentGameType === 'color') { showView('view-color'); initColorGame(art.img); }
+        }
+
+        // ================= 拼图逻辑 =================
+        let puzzlePiecesCount = 4;
+        let solvedPieces = 0;
+        let pieceStatus = new Array(4).fill(false);
+        
+        const clipPaths = [
+            'polygon(0% 0%, 55% 0%, 45% 35%, 50% 50%, 20% 60%, 0% 40%)',
+            'polygon(55% 0%, 100% 0%, 100% 40%, 75% 55%, 50% 50%, 45% 35%)',
+            'polygon(0% 40%, 20% 60%, 50% 50%, 40% 80%, 55% 100%, 0% 100%)',
+            'polygon(50% 50%, 75% 55%, 100% 40%, 100% 100%, 55% 100%, 40% 80%)'
+        ];
+
+        function initPuzzle(imgSrc) {
+            const pool = document.getElementById('puzzle-pool');
+            const target = document.getElementById('puzzle-target');
+            const targetImg = document.getElementById('target-img');
+            
+            pool.innerHTML = ''; target.querySelectorAll('.puzzle-piece').forEach(p => p.remove());
+            targetImg.src = imgSrc; solvedPieces = 0; pieceStatus.fill(false); updatePuzzleProgress(); 
+
+            const img = new Image();
+            img.src = imgSrc;
+            img.onload = () => {
+                const maxW = target.clientWidth * 0.9;
+                const maxH = target.clientHeight * 0.9;
+                let displayW = img.width, displayH = img.height;
+                const ratio = Math.min(maxW / displayW, maxH / displayH);
+                displayW *= ratio; displayH *= ratio;
+                
+                targetImg.style.width = `${displayW}px`;
+                targetImg.style.height = `${displayH}px`;
+                
+                const targetLeftOffset = (target.clientWidth - displayW) / 2;
+                const targetTopOffset = (target.clientHeight - displayH) / 2;
+
+                clipPaths.forEach((clipStr, index) => {
+                    const matches = clipStr.match(/\((.*)\)/)[1].split(',');
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    const points = matches.map(p => {
+                        const [x, y] = p.trim().split(' ');
+                        const px = parseFloat(x) / 100;
+                        const py = parseFloat(y) / 100;
+                        if (px < minX) minX = px; if (px > maxX) maxX = px;
+                        if (py < minY) minY = py; if (py > maxY) maxY = py;
+                        return { x: px, y: py };
+                    });
+
+                    const visW = (maxX - minX) * displayW;
+                    const visH = (maxY - minY) * displayH;
+
+                    const newClipPoints = points.map(p => {
+                        const nx = (p.x - minX) / (maxX - minX) * 100;
+                        const ny = (p.y - minY) / (maxY - minY) * 100;
+                        return `${nx}% ${ny}%`;
+                    });
+                    
+                    const piece = document.createElement('div');
+                    piece.className = 'puzzle-piece in-pool';
+                    piece.dataset.index = index;
+                    piece.dataset.minX = minX; piece.dataset.minY = minY;
+                    piece.dataset.visW = visW; piece.dataset.visH = visH;
+                    piece.dataset.displayW = displayW; piece.dataset.displayH = displayH;
+
+                    const scale = 0.5;
+                    piece.style.width = `${visW * scale}px`;
+                    piece.style.height = `${visH * scale}px`;
+                    piece.style.backgroundImage = `url(${imgSrc})`;
+                    piece.style.backgroundSize = `${displayW * scale}px ${displayH * scale}px`;
+                    piece.style.backgroundPosition = `-${minX * displayW * scale}px -${minY * displayH * scale}px`;
+                    piece.style.clipPath = `polygon(${newClipPoints.join(', ')})`;
+
+                    makeDraggablePiece(piece, pool, target);
+                    pool.appendChild(piece);
+                });
+            };
+        }
+
+        function makeDraggablePiece(el, pool, target) {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+            
+            const startDrag = (e) => {
+                if (el.classList.contains('placed')) return;
+                isDragging = true;
+                
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                const rect = el.getBoundingClientRect();
+
+                const clickRatioX = (clientX - rect.left) / rect.width;
+                const clickRatioY = (clientY - rect.top) / rect.height;
+
+                el.classList.remove('in-pool');
+                el.classList.add('dragging');
+                
+                const realW = parseFloat(el.dataset.visW);
+                const realH = parseFloat(el.dataset.visH);
+                const dispW = parseFloat(el.dataset.displayW);
+                const dispH = parseFloat(el.dataset.displayH);
+                const minX = parseFloat(el.dataset.minX);
+                const minY = parseFloat(el.dataset.minY);
+
+                el.style.width = `${realW}px`;
+                el.style.height = `${realH}px`;
+                el.style.backgroundSize = `${dispW}px ${dispH}px`;
+                el.style.backgroundPosition = `-${minX * dispW}px -${minY * dispH}px`;
+                
+                document.body.appendChild(el);
+
+                const newLeft = clientX - realW * clickRatioX;
+                const newTop = clientY - realH * clickRatioY;
+                
+                el.style.left = `${newLeft}px`;
+                el.style.top = `${newTop}px`;
+
+                startX = clientX; startY = clientY;
+                initialX = newLeft; initialY = newTop;
+            };
+
+            const onDrag = (e) => {
+                if (!isDragging) return;
+                if(e.cancelable) e.preventDefault(); 
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                
+                el.style.left = `${initialX + (clientX - startX)}px`;
+                el.style.top = `${initialY + (clientY - startY)}px`;
+            };
+
+            const endDrag = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+                const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+                const targetRect = target.getBoundingClientRect();
+
+                if (clientX > targetRect.left && clientX < targetRect.right &&
+                    clientY > targetRect.top && clientY < targetRect.bottom) {
+                    
+                    el.classList.remove('dragging');
+                    el.classList.add('placed');
+                    target.appendChild(el);
+                    
+                    const minX = parseFloat(el.dataset.minX);
+                    const minY = parseFloat(el.dataset.minY);
+                    const dispW = parseFloat(el.dataset.displayW);
+                    const dispH = parseFloat(el.dataset.displayH);
+                    
+                    const targetLeftOffset = (target.clientWidth - dispW) / 2;
+                    const targetTopOffset = (target.clientHeight - dispH) / 2;
+
+                    el.style.left = `${targetLeftOffset + minX * dispW}px`;
+                    el.style.top = `${targetTopOffset + minY * dispH}px`;
+                    el.style.zIndex = '20';
+                    
+                    const idx = parseInt(el.dataset.index);
+                    if (!pieceStatus[idx]) {
+                        pieceStatus[idx] = true;
+                        solvedPieces++;
+                        updatePuzzleProgress(); playSFX(); checkPuzzleComplete();
+                    }
+                } else {
+                    el.classList.remove('dragging');
+                    el.classList.add('in-pool');
+                    
+                    const scale = 0.5;
+                    const realW = parseFloat(el.dataset.visW);
+                    const realH = parseFloat(el.dataset.visH);
+                    const dispW = parseFloat(el.dataset.displayW);
+                    const dispH = parseFloat(el.dataset.displayH);
+                    const minX = parseFloat(el.dataset.minX);
+                    const minY = parseFloat(el.dataset.minY);
+                    
+                    el.style.width = `${realW * scale}px`;
+                    el.style.height = `${realH * scale}px`;
+                    el.style.backgroundSize = `${dispW * scale}px ${dispH * scale}px`;
+                    el.style.backgroundPosition = `-${minX * dispW * scale}px -${minY * dispH * scale}px`;
+                    el.style.left = ''; el.style.top = '';
+                    
+                    pool.appendChild(el);
+                }
+            };
+
+            el.addEventListener('mousedown', startDrag);
+            el.addEventListener('touchstart', startDrag, {passive: false});
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('touchmove', onDrag, {passive: false});
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function updatePuzzleProgress() {
+            const progress = Math.floor((solvedPieces / puzzlePiecesCount) * 100);
+            document.getElementById('puzzle-progress-text').innerText = `古器重聚度: ${progress}%`;
+            document.getElementById('puzzle-progress-bar').style.width = `${progress}%`;
+        }
+
+        function checkPuzzleComplete() {
+            if (solvedPieces === puzzlePiecesCount) {
+                playSFX(); 
+                setTimeout(() => { showModal('残纹归位 古器重聚'); }, 500);
+            }
+        }
+
+        // ================= 染余痕逻辑 =================
+        let ctxBase, ctxMask, ctxCheck;
+        let isDrawing = false;
+        let colorProgress = 0;
+        let colorTimer = null;
+        let imgWidth = 0, imgHeight = 0;
+        let isGameFinished = false;
+        let lastX = 0, lastY = 0;
+
+        function initColorGame(imgSrc) {
+            const container = document.getElementById('color-container');
+            if(colorTimer) clearInterval(colorTimer);
+            container.innerHTML = '<canvas id="color-base" class="color-canvas"></canvas><canvas id="color-mask" class="color-canvas"></canvas>';
+            
+            const canvasBase = document.getElementById('color-base');
+            const canvasMask = document.getElementById('color-mask');
+            const progressText = document.getElementById('color-progress-text');
+            const progressBar = document.getElementById('color-progress-bar');
+            
+            colorProgress = 0; isDrawing = false; isGameFinished = false;
+            progressText.innerText = '古色复还度: 0%';
+            progressBar.style.width = '0%';
+            progressBar.style.background = 'linear-gradient(90deg, #b8a593, var(--accent-color))';
+
+            const img = new Image();
+            img.src = imgSrc;
+            img.onload = () => {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = container.getBoundingClientRect();
+                const cssWidth = rect.width, cssHeight = rect.height;
+
+                canvasBase.width = cssWidth * dpr; canvasBase.height = cssHeight * dpr;
+                canvasMask.width = cssWidth * dpr; canvasMask.height = cssHeight * dpr;
+                canvasBase.style.width = `${cssWidth}px`; canvasBase.style.height = `${cssHeight}px`;
+                canvasMask.style.width = `${cssWidth}px`; canvasMask.style.height = `${cssHeight}px`;
+
+                ctxBase = canvasBase.getContext('2d'); ctxMask = canvasMask.getContext('2d');
+                ctxBase.scale(dpr, dpr); ctxMask.scale(dpr, dpr);
+
+                const scale = Math.min(cssWidth / img.width, cssHeight / img.height) * 0.95; 
+                const drawW = img.width * scale, drawH = img.height * scale;
+                const offsetX = (cssWidth - drawW) / 2, offsetY = (cssHeight - drawH) / 2;
+                
+                imgWidth = cssWidth; imgHeight = cssHeight;
+
+                const newCheck = document.createElement('canvas');
+                newCheck.id = 'color-check'; newCheck.width = 100; newCheck.height = 100;
+                newCheck.style.display = 'none'; document.body.appendChild(newCheck);
+                ctxCheck = newCheck.getContext('2d', { willReadFrequently: true });
+
+                ctxBase.fillStyle = '#ffffff'; ctxBase.fillRect(0, 0, cssWidth, cssHeight);
+                ctxBase.drawImage(img, offsetX, offsetY, drawW, drawH);
+
+                ctxMask.fillStyle = '#dcdcdc'; ctxMask.fillRect(0, 0, cssWidth, cssHeight);
+                ctxMask.filter = 'grayscale(100%)'; ctxMask.drawImage(img, offsetX, offsetY, drawW, drawH);
+                ctxMask.filter = 'none'; 
+                ctxMask.globalCompositeOperation = 'source-atop'; 
+                ctxMask.fillStyle = 'rgba(148, 128, 107, 0.4)'; ctxMask.fillRect(0, 0, cssWidth, cssHeight);
+                ctxMask.globalCompositeOperation = 'destination-out';
+
+                ctxCheck.fillStyle = 'black'; ctxCheck.fillRect(0, 0, 100, 100);
+
+                bindColorEvents(canvasMask, newCheck, cssWidth, cssHeight);
+                colorTimer = setInterval(checkColorProgress, 16);
+            };
+        }
+
+        function bindColorEvents(canvas, checkCanvas, cw, ch) {
+            const getPos = (e, canvasDom) => {
+                const rect = canvasDom.getBoundingClientRect();
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            };
+
+            const draw = (e) => {
+                if (isGameFinished) return;
+                const pos = getPos(e, canvas);
+                
+                ctxMask.beginPath();
+                const brushSize = 50; 
+                ctxMask.lineWidth = brushSize;
+                ctxMask.lineCap = 'round'; ctxMask.lineJoin = 'round';
+                
+                if (isDrawing) {
+                    ctxMask.moveTo(lastX, lastY); ctxMask.lineTo(pos.x, pos.y); ctxMask.stroke();
+                } else {
+                    ctxMask.beginPath(); ctxMask.arc(pos.x, pos.y, brushSize/2, 0, Math.PI * 2); ctxMask.fill();
+                }
+
+                const scaleX = 100 / cw, scaleY = 100 / ch;
+                const cx = pos.x * scaleX, cy = pos.y * scaleY;
+                
+                ctxCheck.globalCompositeOperation = 'destination-out';
+                ctxCheck.beginPath();
+                ctxCheck.lineWidth = brushSize * scaleX; 
+                ctxCheck.lineCap = 'round'; ctxCheck.lineJoin = 'round';
+                
+                if (isDrawing) {
+                    ctxCheck.moveTo(lastX * scaleX, lastY * scaleY); ctxCheck.lineTo(cx, cy); ctxCheck.stroke();
+                } else {
+                    ctxCheck.beginPath(); ctxCheck.arc(cx, cy, (brushSize * scaleX)/2, 0, Math.PI * 2); ctxCheck.fill();
+                }
+                lastX = pos.x; lastY = pos.y;
+            };
+
+            canvas.addEventListener('mousedown', (e) => {
+                if(isGameFinished) return;
+                isDrawing = true;
+                const pos = getPos(e, canvas); lastX = pos.x; lastY = pos.y; draw(e);
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDrawing || isGameFinished) return;
+                if(e.cancelable) e.preventDefault(); draw(e);
+            });
+            canvas.addEventListener('mouseup', () => { isDrawing = false; });
+            canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+            
+            canvas.addEventListener('touchstart', (e) => {
+                if(isGameFinished) return;
+                isDrawing = true;
+                const pos = getPos(e, canvas); lastX = pos.x; lastY = pos.y; draw(e);
+            }, {passive: false});
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDrawing || isGameFinished) return;
+                if(e.cancelable) e.preventDefault(); draw(e);
+            }, {passive: false});
+            canvas.addEventListener('touchend', () => { isDrawing = false; });
+        }
+
+        function checkColorProgress() {
+            if (!ctxCheck || isGameFinished) return;
+            
+            const imageData = ctxCheck.getImageData(0, 0, 100, 100).data;
+            let transparentPixels = 0;
+            for (let i = 3; i < imageData.length; i += 4) {
+                if (imageData[i] < 128) transparentPixels++;
+            }
+            let realProgress = Math.floor((transparentPixels / 10000) * 100);
+            
+            if (realProgress > colorProgress) {
+                colorProgress = realProgress;
+                document.getElementById('color-progress-text').innerText = `古色复还度: ${colorProgress}%`;
+                document.getElementById('color-progress-bar').style.width = `${colorProgress}%`;
+            }
+
+            if (colorProgress >= 76) {
+                isGameFinished = true;
+                clearInterval(colorTimer); 
+                
+                document.getElementById('color-progress-text').innerText = `古色复还度: 100%`;
+                document.getElementById('color-progress-bar').style.width = `100%`;
+                document.getElementById('color-progress-bar').style.background = '#94806b';
+                
+                ctxMask.clearRect(0, 0, imgWidth, imgHeight);
+                playSFX(); 
+                setTimeout(() => { showModal('轻染余痕 古色复还'); }, 400);
+            }
+        }
+
+        // ================= 弹窗控制 =================
+        function showModal(text) {
+            document.getElementById('modal-title-text').innerText = text;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function modalAction(action) {
+            playSFX(); document.getElementById('modal').classList.add('hidden');
+            if (action === 'back') { showView('view-select-game'); } 
+            else if (action === 'continue') { showView('view-select-artifact'); }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
