@@ -23,12 +23,13 @@
         @font-face { 
             font-family: 'ysfxt'; 
             src: url('./images/ysfxt.woff2') format('woff2');
+            font-display: swap;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
             background: radial-gradient(circle at center, #f2e8df 0%, #dccbb8 100%);
-            font-family: 'QIJIC', "STSong", "SimSun", serif;
+            font-family: 'qijic', "STSong", "SimSun", serif;
             color: var(--text-color);
             user-select: none; -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
@@ -85,13 +86,13 @@
         #view-home { cursor: pointer; z-index: 10; }
         
         .vertical-title {
-            font-family: 'YanShiFoXi', '楷体', serif;
-            font-size: 15vw; 
+            font-family: 'ysfxt', '楷体', serif;
+            font-size: 16vw; 
             color: #94806b;
             writing-mode: vertical-rl; 
-            letter-spacing: 10px;
+            letter-spacing: 12px;
             margin: 0;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.12);
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.15);
             z-index: 20;
             font-weight: normal;
         }
